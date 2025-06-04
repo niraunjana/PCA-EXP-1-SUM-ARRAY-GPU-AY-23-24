@@ -2,12 +2,14 @@
 
 <h3>ENTER YOUR NAME : NIRAUNJANA GAYATHRI G R</h3>
 <h3>ENTER YOUR REGISTER NO : 212222230096</h3>
-<h3>EX. NO : 1</h3>
+<h3>EX. NO : 01</h3>
 <h3>DATE : </h3>
 
 <h1> <align=center> SUM ARRAY ON HOST AND DEVICE </h3>
 PCA-GPU-based-vector-summation.-Explore-the-differences.
+    
 i) Using the program sumArraysOnGPU-timer.cu, set the block.x = 1023. Recompile and run it. Compare the result with the execution configuration of block.x = 1024. Try to explain the difference and the reason.
+
 
 ii) Refer to sumArraysOnGPU-timer.cu, and let block.x = 256. Make a new kernel to let each thread handle two elements. Compare the results with other execution confi gurations.
 
@@ -30,8 +32,88 @@ Google Colab with NVCC Compiler
 
 ## PROGRAM:
 ```
+Developed By : Niraunjana Gayathri G R
+Register No. : 212222230096
+```
+```
+%%cuda
 #include <cuda_runtime.h>
 #include <stdio.h>
+#include <sys/time.h>
+
+#ifndef _COMMON_H
+#define _COMMON_H
+
+#define CHECK(call)                                                            \
+{                                                                              \
+    const cudaError_t error = call;                                            \
+    if (error != cudaSuccess)                                                  \
+    {                                                                          \
+        fprintf(stderr, "Error: %s:%d, ", __FILE__, __LINE__);                 \
+        fprintf(stderr, "code: %d, reason: %s\n", error,                       \
+                cudaGetErrorString(error));                                    \
+        exit(1);                                                               \
+    }                                                                          \
+}
+
+#define CHECK_CUBLAS(call)                                                     \
+{                                                                              \
+    cublasStatus_t err;                                                        \
+    if ((err = (call)) != CUBLAS_STATUS_SUCCESS)                               \
+    {                                                                          \
+        fprintf(stderr, "Got CUBLAS error %d at %s:%d\n", err, __FILE__,       \
+                __LINE__);                                                     \
+        exit(1);                                                               \
+    }                                                                          \
+}
+
+#define CHECK_CURAND(call)                                                     \
+{                                                                              \
+    curandStatus_t err;                                                        \
+    if ((err = (call)) != CURAND_STATUS_SUCCESS)                               \
+    {                                                                          \
+        fprintf(stderr, "Got CURAND error %d at %s:%d\n", err, __FILE__,       \
+                __LINE__);                                                     \
+        exit(1);                                                               \
+    }                                                                          \
+}
+
+#define CHECK_CUFFT(call)                                                      \
+{                                                                              \
+    cufftResult err;                                                           \
+    if ( (err = (call)) != CUFFT_SUCCESS)                                      \
+    {                                                                          \
+        fprintf(stderr, "Got CUFFT error %d at %s:%d\n", err, __FILE__,        \
+                __LINE__);                                                     \
+        exit(1);                                                               \
+    }                                                                          \
+}
+
+#define CHECK_CUSPARSE(call)                                                   \
+{                                                                              \
+    cusparseStatus_t err;                                                      \
+    if ((err = (call)) != CUSPARSE_STATUS_SUCCESS)                             \
+    {                                                                          \
+        fprintf(stderr, "Got error %d at %s:%d\n", err, __FILE__, __LINE__);   \
+        cudaError_t cuda_err = cudaGetLastError();                             \
+        if (cuda_err != cudaSuccess)                                           \
+        {                                                                      \
+            fprintf(stderr, "  CUDA error \"%s\" also detected\n",             \
+                    cudaGetErrorString(cuda_err));                             \
+        }                                                                      \
+        exit(1);                                                               \
+    }                                                                          \
+}
+
+inline double seconds()
+{
+    struct timeval tp;
+    struct timezone tzp;
+    int i = gettimeofday(&tp, &tzp);
+    return ((double)tp.tv_sec + (double)tp.tv_usec * 1.e-6);
+}
+
+#endif // _COMMON_H
 
 void checkResult(float *hostRef, float *gpuRef, const int N)
 {
@@ -76,14 +158,12 @@ void sumArraysOnHost(float *A, float *B, float *C, const int N)
         C[idx] = A[idx] + B[idx];
     }
 }
+__global__ void sumArraysOnGPU(float *A, float *B, float *C, const int N)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
 
-
-__global__ void sumArraysOnGPU(float *A, float *B, float *C, const int N){
-    int i = blockIdx.x*blockDim.x+threadIdx.x;
-    if (i<N) C[i] = A[i] + B[i];
+    if (i < N) C[i] = A[i] + B[i];
 }
-
-
 
 int main(int argc, char **argv)
 {
@@ -175,7 +255,7 @@ int main(int argc, char **argv)
 
 ## OUTPUT:
 
-![image](https://github.com/user-attachments/assets/8d5e5907-79b6-4143-bc4b-96eebcdd0884)
+![360790011-ffbfaeec-ea5b-49ec-93c9-719913450ec3](https://github.com/user-attachments/assets/97b16bf3-3962-429a-ac66-ef08faf88b02)
 
 
 ## RESULT:
